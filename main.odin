@@ -13,9 +13,18 @@ Error :: enum {
 }
 
 restore :: proc(src: string, dest: string) {
-	fmt.println(dest)
 	os.remove_all(dest)
+	srcStat, statErr := os.stat(src, context.allocator)
+	defer os.file_info_delete(srcStat, context.allocator)
 
+	if srcStat.type == .Directory {
+		ioerr := os.make_directory_all(dest)
+		ioerr = os.copy_directory_all(dest, src)
+	} else {
+		parentDir := os.dir(dest)
+		ioerr := os.make_directory_all(parentDir)
+		ioerr = os.copy_file(dest, src)
+	}
 }
 
 indir :: proc(dir: string) -> Error {
