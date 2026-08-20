@@ -7,7 +7,16 @@ import "core:os"
 import "core:strings"
 
 
-indir :: proc(dir: string) {
+Error :: enum {
+	None = 0
+}
+
+restore :: proc(src: string, dest: string) {
+	fmt.println(src)
+	fmt.println(dest)
+}
+
+indir :: proc(dir: string) -> Error {
 	configPath := strings.concatenate([]string{dir, "/", "tomlinks.ini"})
 	defer delete(configPath)
 
@@ -15,12 +24,15 @@ indir :: proc(dir: string) {
 	defer ini.delete_map(m)
 	if (ok) {
 		for sect, dict in m {
-			for k, v in dict {
-				fmt.printf(k)
-				fmt.printf(v)
+			for k, dest in dict {
+				src := strings.concatenate([]string{dir, "/", k})
+				defer delete(src)
+				restore(src, dest)
 			}
 		}
 	}
+
+	return nil
 }
 
 
