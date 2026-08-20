@@ -52,9 +52,10 @@ indir :: proc(dir: string) -> Error {
 	defer ini.delete_map(m)
 	if (ok) {
 		for sect, dict in m {
-			for src, &dest in dict {
+			for src, dest0 in dict {
 				fmt.println(src)
-				dest, was_alloc := strings.replace_all(dest, "~", home)
+				dest, was_alloc := strings.replace_all(dest0, "~", home)
+				defer if was_alloc delete(dest)
 				
 				if (subcommand == .Collect) {
 					collect(src, dest)
