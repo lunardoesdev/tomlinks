@@ -45,16 +45,15 @@ indir :: proc(dir: string) -> Error {
 	home, homeDirError := os.user_home_dir(context.allocator)
 	defer delete(home)
 
-	configPath := strings.concatenate([]string{dir, "/", "tomlinks.ini"})
+	configPath := strings.concatenate([]string{"tomlinks.ini"})
 	defer delete(configPath)
 
 	m, err, ok := ini.load_map_from_path(configPath, context.allocator)
 	defer ini.delete_map(m)
 	if (ok) {
 		for sect, dict in m {
-			for k, &dest in dict {
-				src := strings.concatenate([]string{dir, "/", k})
-				defer delete(src)
+			for src, &dest in dict {
+				fmt.println(src)
 				dest, was_alloc := strings.replace_all(dest, "~", home)
 				
 				if (subcommand == .Collect) {
@@ -72,11 +71,15 @@ indir :: proc(dir: string) -> Error {
 subcommand : SubCommand
 
 main :: proc() {
+	cwd := os.get_working_directory(context.allocator) or_else ""
+
 	if os.args[1] == "collect" {
 		fmt.println("collect mode")
 		subcommand = .Collect
 	}
 	for arg in os.args[2:] {
+		os.change_directory(arg)
 		indir(arg)
+		os.change_directory(cwd)
 	}
 }
