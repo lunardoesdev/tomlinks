@@ -17,9 +17,15 @@ Error :: enum {
 }
 
 restore :: proc(src: string, dest: string) {
-	os.remove_all(dest)
 	srcStat, statErr := os.stat(src, context.allocator)
 	defer os.file_info_delete(srcStat, context.allocator)
+	if statErr != nil {
+		fmt.println("file not found (or other error): ", src)
+		return
+	}
+
+
+	os.remove_all(dest)
 
 	if srcStat.type == .Directory {
 		ioerr := os.make_directory_all(dest)
