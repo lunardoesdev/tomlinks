@@ -6,6 +6,10 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 
+SubCommand :: enum {
+	Restore = 0,
+	Collect
+}
 
 Error :: enum {
 	None = 0,
@@ -27,6 +31,10 @@ restore :: proc(src: string, dest: string) {
 	}
 }
 
+collect :: proc(src: string, dest: string) {
+	restore(dest, src)
+}
+
 indir :: proc(dir: string) -> Error {
 	home, homeDirError := os.user_home_dir(context.allocator)
 	defer delete(home)
@@ -42,7 +50,12 @@ indir :: proc(dir: string) -> Error {
 				src := strings.concatenate([]string{dir, "/", k})
 				defer delete(src)
 				dest, was_alloc := strings.replace_all(dest, "~", home)
-				restore(src, dest)
+				
+				if (subcommand == .Collect) {
+					collect(src, dest)
+				} else {
+					restore(src, dest)
+				}
 			}
 		}
 	}
@@ -50,8 +63,13 @@ indir :: proc(dir: string) -> Error {
 	return nil
 }
 
+subcommand : SubCommand
 
 main :: proc() {
+	if os.args[1] == "collect" {
+		fmt.println("collect mode")
+		subcommand = .Collect
+	}
 	for arg in os.args[2:] {
 		indir(arg)
 	}
