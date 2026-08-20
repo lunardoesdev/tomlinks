@@ -68,15 +68,58 @@ indir :: proc(dir: string) -> Error {
 	return nil
 }
 
+help :: proc() {
+fmt.println(
+`tomlinks - backup software
+
+This will restore files from package to specified
+destinations:
+tomlinks restore path-to-backup-dir
+
+This will collect files from destinations to backup package:
+tomlinks collect path-to-backup-dir
+
+You can also specify multiple directories with
+backup packages:
+tomlinks restore path1 path2 path3
+
+What is backup package?
+Backup package is directory with tomlinks.ini file.
+it just contains keys and values with no sections, keys
+are source files or directories, values are destination,
+like that:
+
+./local/path/some.conf = ~/.some.conf
+another-local-path/dir = ~/.config/dir
+`)
+}
+
 subcommand : SubCommand
 
 main :: proc() {
 	cwd := os.get_working_directory(context.allocator) or_else ""
+	
+	if len(os.args) < 2 {
+		help()
+		return
+	}
 
-	if os.args[1] == "collect" {
+	if os.args[1] == "--help" {
+		help()
+		return
+	}
+	else if os.args[1] == "collect" {
 		fmt.println("collect mode")
 		subcommand = .Collect
 	}
+	else if os.args[1] == "restore" {
+		subcommand = .Restore
+	}
+	else {
+		help()
+		return
+	}
+	
 	for arg in os.args[2:] {
 		os.change_directory(arg)
 		indir(arg)
