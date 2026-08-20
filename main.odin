@@ -8,15 +8,20 @@ import "core:strings"
 
 
 Error :: enum {
-	None = 0
+	None = 0,
+	Some
 }
 
 restore :: proc(src: string, dest: string) {
-	fmt.println(src)
 	fmt.println(dest)
+	os.remove_all(dest)
+
 }
 
 indir :: proc(dir: string) -> Error {
+	home, homeDirError := os.user_home_dir(context.allocator)
+	defer delete(home)
+
 	configPath := strings.concatenate([]string{dir, "/", "tomlinks.ini"})
 	defer delete(configPath)
 
@@ -24,9 +29,10 @@ indir :: proc(dir: string) -> Error {
 	defer ini.delete_map(m)
 	if (ok) {
 		for sect, dict in m {
-			for k, dest in dict {
+			for k, &dest in dict {
 				src := strings.concatenate([]string{dir, "/", k})
 				defer delete(src)
+				dest, was_alloc := strings.replace_all(dest, "~", home)
 				restore(src, dest)
 			}
 		}
