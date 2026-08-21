@@ -18,7 +18,7 @@ Error :: enum {
 }
 
 sync :: proc(src: string, dest: string) -> (ok: bool) {
-	log.info("syncing from ", src, " to ", dest)
+	log.info("syncing from", src, "to", dest)
 	srcStat, statErr := os.stat(src, context.allocator)
 	if statErr != nil {
 		fmt.println("file not found (or other error): ", src)
