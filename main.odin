@@ -2,13 +2,14 @@ package main
 
 import "core:encoding/ini"
 import "core:fmt"
-
+import "core:log"
 import "core:os"
 import "core:strings"
 
 SubCommand :: enum {
 	Restore = 0,
-	Collect
+	Collect,
+	Help
 }
 
 Error :: enum {
@@ -41,7 +42,7 @@ collect :: proc(src: string, dest: string) {
 	restore(dest, src)
 }
 
-indir :: proc(dir: string) -> Error {
+indir :: proc(dir: string, subcommand: SubCommand) -> Error {
 	home, homeDirError := os.user_home_dir(context.allocator)
 	defer delete(home)
 
@@ -55,7 +56,7 @@ indir :: proc(dir: string) -> Error {
 			for src, dest0 in dict {
 				fmt.println(src)
 				dest, was_alloc := strings.replace_all(dest0, "~", home)
-				defer if was_alloc delete(dest)
+				defer if was_alloc { delete(dest) }
 				
 				if (subcommand == .Collect) {
 					collect(src, dest)
@@ -95,35 +96,32 @@ another-local-path/dir = ~/.config/dir
 `)
 }
 
-subcommand : SubCommand
+get_subcommand :: proc() -> SubCommand {
+	log.debug("extracting subcommand")
+	switch os.args[1] {
+		case "restore":
+			return .Restore
+		case "collect":
+			return .Collect
+		case:
+			return .Help
+	}
+}
 
 main :: proc() {
+	context.logger = log.create_console_logger()
+	log.info("initializing tomlinks")
 	cwd := os.get_working_directory(context.allocator) or_else ""
-	
-	if len(os.args) < 2 {
+	subcommand := get_subcommand()
+
+	if (subcommand == .Help) {
 		help()
 		return
 	}
 
-	if os.args[1] == "--help" {
-		help()
-		return
-	}
-	else if os.args[1] == "collect" {
-		fmt.println("collect mode")
-		subcommand = .Collect
-	}
-	else if os.args[1] == "restore" {
-		subcommand = .Restore
-	}
-	else {
-		help()
-		return
-	}
-	
 	for arg in os.args[2:] {
 		os.change_directory(arg)
-		indir(arg)
+		indir(arg, subcommand)
 		os.change_directory(cwd)
 	}
 }
