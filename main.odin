@@ -17,7 +17,8 @@ Error :: enum {
 	Some
 }
 
-restore :: proc(src: string, dest: string) {
+sync :: proc(src: string, dest: string) {
+	log.info("syncing from ", src, " to ", dest)
 	srcStat, statErr := os.stat(src, context.allocator)
 	defer os.file_info_delete(srcStat, context.allocator)
 	if statErr != nil {
@@ -38,8 +39,14 @@ restore :: proc(src: string, dest: string) {
 	}
 }
 
+restore :: proc(src: string, dest: string) {
+	log.info("restoring from", src, "to", dest)
+	sync(src, dest)
+}
+
 collect :: proc(src: string, dest: string) {
-	restore(dest, src)
+	log.info("collecting to", src, "from", dest)
+	sync(dest, src)
 }
 
 indir :: proc(dir: string, subcommand: SubCommand) -> Error {
