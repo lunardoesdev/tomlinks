@@ -17,26 +17,34 @@ Error :: enum {
 	Some
 }
 
-sync :: proc(src: string, dest: string) {
+sync :: proc(src: string, dest: string) -> (ok: bool) {
 	log.info("syncing from ", src, " to ", dest)
 	srcStat, statErr := os.stat(src, context.allocator)
-	defer os.file_info_delete(srcStat, context.allocator)
 	if statErr != nil {
 		fmt.println("file not found (or other error): ", src)
 		return
 	}
-
+	defer os.file_info_delete(srcStat, context.allocator)
 
 	os.remove_all(dest)
 
 	if srcStat.type == .Directory {
-		ioerr := os.make_directory_all(dest)
-		ioerr = os.copy_directory_all(dest, src)
+		os.make_directory_all(dest)
+		err := os.copy_directory_all(dest, src)
+		if err != nil {
+			log.fatal("couldn't copy directory", src, "to", dest)
+			return false
+		}
 	} else {
 		parentDir := os.dir(dest)
-		ioerr := os.make_directory_all(parentDir)
-		ioerr = os.copy_file(dest, src)
+		os.make_directory_all(parentDir)
+		err := os.copy_file(dest, src)
+		if err != nil {
+			log.fatal("couldn't copy file", src, "to", dest)
+		}
 	}
+
+	return true
 }
 
 restore :: proc(src: string, dest: string) {
