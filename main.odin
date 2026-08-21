@@ -113,6 +113,7 @@ another-local-path/dir = ~/.config/dir
 
 get_subcommand :: proc() -> SubCommand {
 	log.debug("extracting subcommand")
+	if len(os.args) < 2 { return .Help }
 	switch os.args[1] {
 		case "restore":
 			return .Restore

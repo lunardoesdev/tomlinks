@@ -1,3 +1,2 @@
 odin build .
-mkdir -p ~/.local/bin
-mv tomlinks ~/.local/bin
+sudo mv tomlinks /bin/tomlinks
