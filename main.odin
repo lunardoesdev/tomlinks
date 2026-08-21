@@ -22,7 +22,7 @@ sync :: proc(src: string, dest: string) -> (ok: bool) {
 	srcStat, statErr := os.stat(src, context.allocator)
 	if statErr != nil {
 		fmt.println("file not found (or other error): ", src)
-		return
+		return false
 	}
 	defer os.file_info_delete(srcStat, context.allocator)
 
