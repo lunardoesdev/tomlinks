@@ -18,7 +18,7 @@ Error :: enum {
 }
 
 sync :: proc(src: string, dest: string) -> (ok: bool) {
-	log.info("syncing from", src, "to", dest)
+	log.info("", src, " -> ", dest)
 	srcStat, statErr := os.stat(src, context.allocator)
 	if statErr != nil {
 		fmt.println("file not found (or other error): ", src)
@@ -48,12 +48,12 @@ sync :: proc(src: string, dest: string) -> (ok: bool) {
 }
 
 restore :: proc(src: string, dest: string) {
-	log.info("restoring from", src, "to", dest)
+	log.debug("restoring from", src, "to", dest)
 	sync(src, dest)
 }
 
 collect :: proc(src: string, dest: string) {
-	log.info("collecting to", src, "from", dest)
+	log.debug("collecting to", src, "from", dest)
 	sync(dest, src)
 }
 
@@ -69,7 +69,7 @@ indir :: proc(dir: string, subcommand: SubCommand) -> Error {
 	if (ok) {
 		for sect, dict in m {
 			for src, dest0 in dict {
-				fmt.println(src)
+				// fmt.println(src)
 				dest, was_alloc := strings.replace_all(dest0, "~", home)
 				defer if was_alloc { delete(dest) }
 				
@@ -125,8 +125,8 @@ get_subcommand :: proc() -> SubCommand {
 }
 
 main :: proc() {
-	context.logger = log.create_console_logger()
-	log.info("initializing tomlinks")
+	context.logger = log.create_console_logger(.Info)
+	log.debug("initializing tomlinks")
 	cwd := os.get_working_directory(context.allocator) or_else ""
 	subcommand := get_subcommand()
 
